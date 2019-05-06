@@ -2493,13 +2493,15 @@ def search_projects(
                 model.PagureGroup.group_name.notin_(exclude_groups)
             )
 
+        sublist = (
+            subquery0.union(sub_q1).union(sub_q2).union(sub_q3).union(sub_q4)
+        )
+
+        # I am quite displeased about running the query here instead of using
+        # a subquery but if we do use a subquery we're crashing on sqlalchemy
+        # >= 1.3.0
         projects = projects.filter(
-            model.Project.id.in_(
-                subquery0.union(sub_q1)
-                .union(sub_q2)
-                .union(sub_q3)
-                .union(sub_q4)
-            )
+            model.Project.id.in_([it[0] for it in sublist.all()])
         )
 
     if fork is not None:
